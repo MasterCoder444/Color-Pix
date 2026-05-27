@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Color Matcher</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg: #0d0d0f;
+      --surface: #17171a;
+      --surface2: #1f1f24;
+      --border: #2a2a32;
+      --accent: #7c6fff;
+      --accent2: #ff6f91;
+      --text: #f0f0f5;
+      --muted: #6b6b80;
+      --success: #4fffb0;
+      --radius: 10px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      width: 360px;
+      min-height: 500px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      overflow-x: hidden;
+    }
+
+    /* HEADER */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .logo-dot {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: conic-gradient(#7c6fff, #ff6f91, #4fffb0, #7c6fff);
+      box-shadow: 0 0 10px #7c6fff66;
+      flex-shrink: 0;
+    }
+    .logo-text {
+      font-family: 'Space Mono', monospace;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      background: linear-gradient(90deg, #7c6fff, #ff6f91);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .clear-btn {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      transition: all 0.2s;
+    }
+    .clear-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+
+    /* PICK SECTION */
+    .pick-section {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .pick-btn {
+      width: 100%;
+      padding: 11px;
+      background: linear-gradient(135deg, #7c6fff22, #ff6f9122);
+      border: 1px solid var(--accent);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s;
+      letter-spacing: 0.02em;
+    }
+    .pick-btn:hover {
+      background: linear-gradient(135deg, #7c6fff44, #ff6f9133);
+      box-shadow: 0 0 16px #7c6fff44;
+    }
+    .pick-btn svg { width: 16px; height: 16px; }
+
+    /* CURRENT COLOR DISPLAY */
+    .current-color {
+      margin-top: 12px;
+      display: flex;
+      gap: 12px;
+      align-items: stretch;
+    }
+    .color-swatch-big {
+      width: 64px;
+      height: 64px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      flex-shrink: 0;
+      background: #333;
+      transition: background 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+    .color-swatch-big::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 60%);
+    }
+    .color-values {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      justify-content: center;
+    }
+    .color-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .color-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      color: var(--muted);
+      width: 28px;
+      flex-shrink: 0;
+    }
+    .color-value {
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      color: var(--text);
+      flex: 1;
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: 4px;
+      transition: background 0.15s;
+    }
+    .color-value:hover { background: var(--surface2); }
+    .copy-icon {
+      width: 14px; height: 14px;
+      opacity: 0.4;
+      cursor: pointer;
+      transition: opacity 0.15s;
+      flex-shrink: 0;
+    }
+    .copy-icon:hover { opacity: 1; }
+    .copied-toast {
+      font-size: 10px;
+      color: var(--success);
+      font-family: 'Space Mono', monospace;
+      opacity: 0;
+      transition: opacity 0.3s;
+      height: 14px;
+    }
+    .copied-toast.show { opacity: 1; }
+
+    /* MANUAL INPUT */
+    .manual-input {
+      margin-top: 10px;
+      display: flex;
+      gap: 6px;
+    }
+    .hex-input {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      padding: 7px 10px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .hex-input:focus { border-color: var(--accent); }
+    .add-btn {
+      background: var(--accent);
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-size: 12px;
+      padding: 7px 14px;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 500;
+      transition: background 0.2s;
+    }
+    .add-btn:hover { background: #6a5df0; }
+
+    /* TABS */
+    .tabs {
+      display: flex;
+      padding: 10px 16px 0;
+      gap: 2px;
+      border-bottom: 1px solid var(--border);
+    }
+    .tab {
+      padding: 7px 14px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--muted);
+      cursor: pointer;
+      border-radius: 8px 8px 0 0;
+      border: 1px solid transparent;
+      border-bottom: none;
+      transition: all 0.2s;
+      background: transparent;
+    }
+    .tab.active {
+      color: var(--text);
+      background: var(--surface);
+      border-color: var(--border);
+      border-bottom-color: var(--surface);
+      margin-bottom: -1px;
+      z-index: 1;
+    }
+    .tab:hover:not(.active) { color: var(--text); }
+
+    /* TAB CONTENT */
+    .tab-content { display: none; padding: 14px 16px; }
+    .tab-content.active { display: block; }
+
+    /* PALETTE */
+    .palette-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 6px;
+    }
+    .swatch {
+      aspect-ratio: 1;
+      border-radius: 6px;
+      cursor: pointer;
+      border: 1px solid rgba(255,255,255,0.1);
+      transition: transform 0.15s, box-shadow 0.15s;
+      position: relative;
+      overflow: hidden;
+    }
+    .swatch::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 50%);
+    }
+    .swatch:hover { transform: scale(1.1); box-shadow: 0 4px 12px rgba(0,0,0,0.4); z-index: 1; }
+    .swatch.selected { outline: 2px solid white; outline-offset: 1px; }
+
+    .empty-palette {
+      text-align: center;
+      color: var(--muted);
+      font-size: 12px;
+      padding: 30px 0;
+      line-height: 1.8;
+    }
+
+    /* MATCHER / COMPARE */
+    .compare-section { display: flex; flex-direction: column; gap: 12px; }
+    .compare-row {
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+    }
+    .compare-slot {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .compare-slot label {
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 500;
+    }
+    .compare-swatch {
+      height: 60px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      color: rgba(255,255,255,0.4);
+      font-family: 'Space Mono', monospace;
+    }
+    .compare-swatch:hover { border-color: var(--accent); }
+    .vs-badge {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      color: var(--muted);
+      padding-bottom: 18px;
+      flex-shrink: 0;
+    }
+
+    .match-result {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px;
+    }
+    .match-label {
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .match-bar-bg {
+      height: 6px;
+      background: var(--surface2);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+    .match-bar {
+      height: 100%;
+      border-radius: 3px;
+      background: linear-gradient(90deg, var(--accent2), var(--success));
+      transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .match-stats {
+      display: flex;
+      justify-content: space-between;
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+    }
+    .match-pct { color: var(--success); font-weight: 700; }
+    .match-delta { color: var(--muted); }
+
+    .harmony-grid {
+      display: flex;
+      gap: 6px;
+      margin-top: 10px;
+    }
+    .harmony-chip {
+      flex: 1;
+      height: 28px;
+      border-radius: 6px;
+      border: 1px solid rgba(255,255,255,0.1);
+      cursor: pointer;
+      transition: transform 0.15s;
+      font-size: 9px;
+      font-family: 'Space Mono', monospace;
+      display: flex;
+      align-items: flex-end;
+      padding: 3px 4px;
+      color: rgba(255,255,255,0.7);
+      overflow: hidden;
+    }
+    .harmony-chip:hover { transform: scaleY(1.1); }
+
+    /* CONTRAST CHECKER */
+    .contrast-section { display: flex; flex-direction: column; gap: 10px; }
+    .contrast-preview {
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      padding: 16px;
+      min-height: 80px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      transition: all 0.3s;
+    }
+    .contrast-preview .preview-heading {
+      font-size: 18px;
+      font-weight: 600;
+    }
+    .contrast-preview .preview-body {
+      font-size: 12px;
+      opacity: 0.85;
+    }
+    .contrast-scores {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+    }
+    .contrast-badge {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px;
+      text-align: center;
+    }
+    .contrast-badge .ratio {
+      font-family: 'Space Mono', monospace;
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+    .contrast-badge .wcag-label { font-size: 10px; color: var(--muted); margin-bottom: 3px; }
+    .contrast-badge .wcag-pass {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    .pass { background: #4fffb022; color: var(--success); }
+    .fail { background: #ff6f9122; color: var(--accent2); }
+
+    .input-pair {
+      display: flex;
+      gap: 8px;
+    }
+    .color-input-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .color-input-wrap label { font-size: 11px; color: var(--muted); }
+    .color-input-wrap input[type="color"] {
+      width: 100%;
+      height: 36px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      cursor: pointer;
+      padding: 2px;
+    }
+
+    /* SCROLLBAR */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    /* ANIMATIONS */
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+    .tab-content.active { animation: fadeIn 0.2s ease; }
+
+    .section-title {
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="logo">
+      <div class="logo-dot"></div>
+      <span class="logo-text">COLOR PIX</span>
+    </div>
+    <button class="clear-btn" id="clearAll">Clear All</button>
+  </div>
+
+  <!-- PICK SECTION -->
+  <div class="pick-section">
+    <button class="pick-btn" id="pickBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 2a10 10 0 1 0 10 10" stroke-linecap="round"/>
+        <path d="M18 2l4 4-8 8H10v-4l8-8z" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Pick Color from Page
+    </button>
+
+    <div class="current-color" id="currentColorDisplay" style="display:none">
+      <div class="color-swatch-big" id="mainSwatch"></div>
+      <div class="color-values">
+        <div class="color-row">
+          <span class="color-label">HEX</span>
+          <span class="color-value" id="hexVal" title="Click to copy">#------</span>
+          <svg class="copy-icon" id="copyHex" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+          </svg>
+        </div>
+        <div class="color-row">
+          <span class="color-label">RGB</span>
+          <span class="color-value" id="rgbVal" title="Click to copy">-</span>
+          <svg class="copy-icon" id="copyRgb" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+          </svg>
+        </div>
+        <div class="color-row">
+          <span class="color-label">HSL</span>
+          <span class="color-value" id="hslVal" title="Click to copy">-</span>
+          <svg class="copy-icon" id="copyHsl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+          </svg>
+        </div>
+        <span class="copied-toast" id="copiedToast">✓ Copied!</span>
+      </div>
+    </div>
+
+    <div class="manual-input">
+      <input class="hex-input" id="hexInput" type="text" placeholder="Enter HEX, e.g. #ff6f91" maxlength="7"/>
+      <button class="add-btn" id="addColor">Add</button>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <div class="tab active" data-tab="palette">Palette</div>
+    <div class="tab" data-tab="matcher">Match</div>
+    <div class="tab" data-tab="contrast">Contrast</div>
+  </div>
+
+  <!-- PALETTE TAB -->
+  <div class="tab-content active" id="tab-palette">
+    <div class="section-title">Saved Colors</div>
+    <div class="palette-grid" id="paletteGrid"></div>
+    <div class="empty-palette" id="emptyPalette">
+      No colors saved yet.<br/>Pick a color or enter a HEX value above.
+    </div>
+  </div>
+
+  <!-- MATCHER TAB -->
+  <div class="tab-content" id="tab-matcher">
+    <div class="compare-section">
+      <div class="compare-row">
+        <div class="compare-slot">
+          <label>Color A</label>
+          <div class="compare-swatch" id="slotA" data-slot="A">click to set</div>
+          <input type="color" id="pickerA" style="display:none"/>
+        </div>
+        <div class="vs-badge">VS</div>
+        <div class="compare-slot">
+          <label>Color B</label>
+          <div class="compare-swatch" id="slotB" data-slot="B">click to set</div>
+          <input type="color" id="pickerB" style="display:none"/>
+        </div>
+      </div>
+
+      <div class="match-result" id="matchResult" style="display:none">
+        <div class="match-label">Color Similarity</div>
+        <div class="match-bar-bg"><div class="match-bar" id="matchBar" style="width:0%"></div></div>
+        <div class="match-stats">
+          <span class="match-pct" id="matchPct">0%</span>
+          <span class="match-delta" id="matchDelta">ΔE: 0</span>
+        </div>
+      </div>
+
+      <div id="harmonySection" style="display:none">
+        <div class="section-title" style="margin-top:4px">Harmony Colors</div>
+        <div class="harmony-grid" id="harmonyGrid"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTRAST TAB -->
+  <div class="tab-content" id="tab-contrast">
+    <div class="contrast-section">
+      <div class="input-pair">
+        <div class="color-input-wrap">
+          <label>Text Color</label>
+          <input type="color" id="fgColor" value="#ffffff"/>
+        </div>
+        <div class="color-input-wrap">
+          <label>Background</label>
+          <input type="color" id="bgColor" value="#0d0d0f"/>
+        </div>
+      </div>
+
+      <div class="contrast-preview" id="contrastPreview">
+        <div class="preview-heading">The quick brown fox</div>
+        <div class="preview-body">Sample text at normal size for readability testing.</div>
+      </div>
+
+      <div class="contrast-scores">
+        <div class="contrast-badge">
+          <div class="ratio" id="contrastRatio">-</div>
+          <div class="wcag-label">Ratio</div>
+          <div class="wcag-pass" id="passAA">AA</div>
+        </div>
+        <div class="contrast-badge">
+          <div class="ratio" id="contrastAAA">-</div>
+          <div class="wcag-label">WCAG AAA</div>
+          <div class="wcag-pass" id="passAAA">AAA</div>
+        </div>
+        <div class="contrast-badge">
+          <div class="ratio" id="contrastLarge">-</div>
+          <div class="wcag-label">Large Text</div>
+          <div class="wcag-pass" id="passLarge">AA</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
